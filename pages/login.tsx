@@ -3,7 +3,7 @@ import Link from "next/link";
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
-import { toast } from "react-hot-toast";
+import { toast ,Toaster} from "react-hot-toast";
 import Image from "next/image";
 
 export default function LoginPage(){
@@ -20,7 +20,11 @@ export default function LoginPage(){
             setLoading(true);
             const response=await axios.post("/api/users/login",user);
             console.log("Login Success",response.data);
-            toast.success("Login Success");
+            if(response.data.error){
+              toast.error("Login Failed")
+            }else{
+              toast.success('Login Successful.')
+            }
             router.push("")
         }catch(error:any){
             console.log("Login failed",error.message);
@@ -39,6 +43,7 @@ export default function LoginPage(){
     },[user])
     return(
         <>
+        <Toaster />
         <div className="absolute top-2 md:left-4 flex justify-center md:justify-start items-center md:items-start w-full">
             <Image src="/lgooo.png" alt="Logo" height={200} width={200}/>
         </div>

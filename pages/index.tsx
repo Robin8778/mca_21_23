@@ -3,21 +3,39 @@ import Head from 'next/head'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef,useState } from 'react'
 import Bridge from '../components/Icons/Bridge'
 import Logo from '../components/Icons/Logo'
 import Modal from '../components/Modal'
 import cloudinary from '../utils/cloudinary'
 import getBase64ImageUrl from '../utils/generateBlurPlaceholder'
 import type { ImageProps } from '../utils/types'
+import axios from 'axios'
 import { useLastViewedPhoto } from '../utils/useLastViewedPhoto'
+import jwt from "jsonwebtoken";
+import { toast ,Toaster} from "react-hot-toast";
 
-const Home: NextPage = ({ images }: { images: ImageProps[] }) => {
+export default function Home({ images, picname }: { images: ImageProps[], picname: string })  {
   const router = useRouter()
+  const [name,setName]=useState("");
   const { photoId } = router.query
   const [lastViewedPhoto, setLastViewedPhoto] = useLastViewedPhoto()
 
   const lastViewedPhotoRef = useRef<HTMLAnchorElement>(null)
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const res=await axios.get("/api/users/me")
+        console.log(res.data)
+        setName(res.data.user.username)
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    }
+
+    fetchData();
+  }, []);
 
   useEffect(() => {
     // This effect keeps track of the last viewed photo in the modal to keep the index page in sync when the user navigates back
@@ -26,6 +44,19 @@ const Home: NextPage = ({ images }: { images: ImageProps[] }) => {
       setLastViewedPhoto(null)
     }
   }, [photoId, lastViewedPhoto, setLastViewedPhoto])
+
+  const logout=async()=>{
+    try{
+        await axios.get("/api/users/logout")
+        toast.success("Logout successful")
+        router.push("/login")
+        console.log(name);
+
+    }catch(error:any){
+        console.log(error.message);
+        toast.error(error.message)
+    }
+}
 
   return (
     <>
@@ -49,6 +80,10 @@ const Home: NextPage = ({ images }: { images: ImageProps[] }) => {
             }}
           />
         )}
+        <Toaster />
+        <div className="text-white font-bold flex justify-center mb-4 cursor-pointer capitalize " onClick={logout}>Welcome {name}</div>
+        
+        
         <div className="columns-1 gap-4 sm:columns-2 xl:columns-3 2xl:columns-4">
         
           {images.map(({ id, public_id, format, blurDataUrl }) => (
@@ -82,11 +117,29 @@ const Home: NextPage = ({ images }: { images: ImageProps[] }) => {
   )
 }
 
-export default Home
+// export default Home
 
-export async function getStaticProps() {
+export async function getServerSideProps({req,res}) {
+  const token = req.cookies.token;
+
+    if (!token) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    // Verify the token
+    const decodedToken = jwt.verify(token, process.env.TOKEN_SECRET);
+
+    // You can use the decodedToken to fetch additional user data if needed
+    const userData = {
+      id: decodedToken.id,
+      username: decodedToken.username,
+      email: decodedToken.email,
+    };
+    let picname=userData.username;
+
+
   const results = await cloudinary.v2.search
-    .expression(`folder:robin/*`)
+    .expression(`folder:${picname}/*`)
     .sort_by('public_id', 'desc')
     .max_results(400)
     .execute()
@@ -116,6 +169,7 @@ export async function getStaticProps() {
   return {
     props: {
       images: reducedResults,
+      picname:picname
     },
   }
 }
