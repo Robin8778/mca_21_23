@@ -1,8 +1,9 @@
+"use client"
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useRouter } from 'next/router'
+import {   useRouter,useSearchParams } from 'next/navigation'
 import { useEffect, useRef,useState } from 'react'
 import Bridge from '../components/Icons/Bridge'
 import Logo from '../components/Icons/Logo'
@@ -17,8 +18,10 @@ import { toast ,Toaster} from "react-hot-toast";
 
 export default function Home({ images, picname }: { images: ImageProps[], picname: string })  {
   const router = useRouter()
+  const searchParams = useSearchParams();
   const [name,setName]=useState("");
-  const { photoId } = router.query
+  // const { photoId } = router.query
+  const {photoId} = new URLSearchParams(searchParams.toString());
   const [lastViewedPhoto, setLastViewedPhoto] = useLastViewedPhoto()
 
   const lastViewedPhotoRef = useRef<HTMLAnchorElement>(null)
