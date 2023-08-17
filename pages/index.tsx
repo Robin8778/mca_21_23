@@ -49,9 +49,7 @@ export default function Home({ images, picname }: { images: ImageProps[], picnam
     try{
         await axios.get("/api/users/logout")
         toast.success("Logout successful")
-        router.push("/login")
-        console.log(name);
-
+        router.push("/login");
     }catch(error:any){
         console.log(error.message);
         toast.error(error.message)
