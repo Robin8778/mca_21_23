@@ -3,7 +3,7 @@ import type { NextPage } from 'next'
 import Head from 'next/head'
 import Image from 'next/image'
 import Link from 'next/link'
-import {   useRouter,useSearchParams } from 'next/navigation'
+import {   useRouter } from 'next/router'
 import { useEffect, useRef,useState } from 'react'
 import Bridge from '../components/Icons/Bridge'
 import Logo from '../components/Icons/Logo'
@@ -18,10 +18,8 @@ import { toast ,Toaster} from "react-hot-toast";
 
 export default function Home({ images, picname }: { images: ImageProps[], picname: string })  {
   const router = useRouter()
-  const searchParams = useSearchParams();
   const [name,setName]=useState("");
-  // const { photoId } = router.query
-  const {photoId} = new URLSearchParams(searchParams.toString());
+  const { photoId } = router.query
   const [lastViewedPhoto, setLastViewedPhoto] = useLastViewedPhoto()
 
   const lastViewedPhotoRef = useRef<HTMLAnchorElement>(null)
@@ -53,6 +51,7 @@ export default function Home({ images, picname }: { images: ImageProps[], picnam
         await axios.get("/api/users/logout")
         toast.success("Logout successful")
         router.push("/login");
+        window.location.href = '/login';
     }catch(error:any){
         console.log(error.message);
         toast.error(error.message)
